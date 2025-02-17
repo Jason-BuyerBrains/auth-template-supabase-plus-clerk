@@ -1,69 +1,85 @@
-# Welcome to your Lovable project
 
-## Project info
+# Clerk + Supabase Auth Template
 
-**URL**: https://lovable.dev/projects/39e377e3-90da-46c0-b809-07fabb213582
+This template provides a production-ready authentication setup using Clerk for auth and Supabase for database/backend services.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- 🔐 Secure authentication with Clerk
+- 📊 Database & RLS with Supabase
+- 🎨 Styled with Tailwind CSS
+- 🎯 TypeScript support
+- 📱 Responsive design
+- 🔄 Auto-sync between Clerk & Supabase
 
-**Use Lovable**
+## Prerequisites
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/39e377e3-90da-46c0-b809-07fabb213582) and start prompting.
+Before you begin, ensure you have:
 
-Changes made via Lovable will be committed automatically to this repo.
+1. A Supabase project
+2. A Clerk application
+3. Node.js installed (v18+ recommended)
 
-**Use your preferred IDE**
+## Environment Variables
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Create a `.env` file with these variables:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+VITE_CLERK_SECRET_KEY=your_clerk_secret_key
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-**Edit a file directly in GitHub**
+## Setup Instructions
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Clone this repository
+2. Install dependencies: `npm install`
+3. Set up your environment variables
+4. Run the SQL migration in your Supabase project:
 
-**Use GitHub Codespaces**
+```sql
+-- Create profiles table
+create table public.profiles (
+  id uuid not null primary key default uuid_generate_v4(),
+  user_id text not null unique,
+  email text not null unique,
+  full_name text,
+  avatar_url text,
+  updated_at timestamp with time zone default timezone('utc'::text, now()),
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+-- Set up Row Level Security
+alter table public.profiles enable row level security;
 
-## What technologies are used for this project?
+-- Create policies
+create policy "Public profiles are viewable by everyone."
+  on public.profiles for select
+  using ( true );
 
-This project is built with .
+create policy "Users can insert their own profile."
+  on public.profiles for insert
+  with check ( auth.uid() = user_id );
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+create policy "Users can update own profile."
+  on public.profiles for update
+  using ( auth.uid() = user_id );
+```
 
-## How can I deploy this project?
+5. Start the development server: `npm run dev`
 
-Simply open [Lovable](https://lovable.dev/projects/39e377e3-90da-46c0-b809-07fabb213582) and click on Share -> Publish.
+## Deployment
 
-## I want to use a custom domain - is that possible?
+1. Build the project: `npm run build`
+2. Deploy to your hosting provider of choice
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+## Additional Resources
+
+- [Clerk Documentation](https://clerk.com/docs)
+- [Supabase Documentation](https://supabase.com/docs)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+
+## Support
+
+For issues and feature requests, please open an issue on GitHub.
